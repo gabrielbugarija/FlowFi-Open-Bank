@@ -10,13 +10,13 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up()
-{
-    Schema::create('expense_type', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('transaction_id')->constrained()->onDelete('cascade');
-        $table->foreignId('expenses_id')->constrained()->onDelete('cascade');
-    });
-}
+    {
+        Schema::create('expense_type', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('transaction_id')->constrained()->onDelete('cascade');
+            $table->foreignId('expenses_id')->constrained()->onDelete('cascade');
+        });
+    }
 
 
     /**
@@ -24,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('type_transaction');
+        Schema::dropIfExists('expense_type');
     }
 };
