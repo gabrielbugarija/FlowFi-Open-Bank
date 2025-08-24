@@ -13,16 +13,20 @@ class Expenses extends Model
 ];
 
 
-    public function user() {
-    return $this->belongsTo(User::class);
-}
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
-public function transactions() {
-    return $this->belongsToMany(Transaction::class, 'type_transaction');
-}
+    public function transactions()
+    {
+        // Pivot table is `expense_type` linking expenses and transactions
+        return $this->belongsToMany(Transaction::class, 'expense_type');
+    }
 
-public function budgets() {
-    return $this->hasMany(Budget::class);
-}
+    public function budgets()
+    {
+        return $this->hasMany(Budget::class);
+    }
 
 }
