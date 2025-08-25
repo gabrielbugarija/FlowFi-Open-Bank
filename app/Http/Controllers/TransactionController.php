@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreTransactionRequest;
+use App\Models\Account;
 use App\Models\Transaction;
 
 
@@ -23,15 +24,19 @@ class TransactionController extends Controller
      */
     public function create()
     {
-        //
+        $accounts = Account::all();
+
+        return view('transactions.create', compact('accounts'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreTransactionRequest $request)
     {
-        //
+        Transaction::create($request->validated());
+
+        return redirect()->route('transactions.index');
     }
 
     /**
@@ -45,24 +50,30 @@ class TransactionController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Transaction $transaction)
     {
-        //
+        $accounts = Account::all();
+
+        return view('transactions.edit', compact('transaction', 'accounts'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(StoreTransactionRequest $request, Transaction $transaction)
     {
-        //
+        $transaction->update($request->validated());
+
+        return redirect()->route('transactions.index');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Transaction $transaction)
     {
-        //
+        $transaction->delete();
+
+        return redirect()->route('transactions.index');
     }
 }

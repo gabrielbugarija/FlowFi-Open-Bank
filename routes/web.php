@@ -18,8 +18,8 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('verified')
         ->name('dashboard');
 
-    Route::get('/accounts', [AccountController::class, 'index'])->name('accounts.index');
-    Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
+      Route::resource('accounts', AccountController::class);
+      Route::resource('transactions', TransactionController::class);
 
     // (Optional) Breeze profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
