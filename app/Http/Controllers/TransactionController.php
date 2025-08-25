@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Transaction;
+use Illuminate\Support\Facades\Auth;
 
 
 class TransactionController extends Controller
@@ -13,7 +14,9 @@ class TransactionController extends Controller
      */
     public function index()
     {
-        $transactions = Transaction::with('account', 'expenses')->latest()->get();
+        $transactions = Transaction::whereHas('account', function ($query) {
+            $query->where('user_id', auth()->id());
+        })->with('account', 'expenses')->latest()->get();
 
         return view('transactions.index', compact('transactions'));
     }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Account;
+use Illuminate\Support\Facades\Auth;
 
 
 class AccountController extends Controller
@@ -13,7 +14,7 @@ class AccountController extends Controller
      */
     public function index()
     {
-        $accounts = Account::with('user')->get(); // eager load user if needed
+        $accounts = Account::where('user_id', auth()->id())->get();
         return view('accounts.index', compact('accounts'));
     }
 
