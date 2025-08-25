@@ -6,7 +6,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? 'Budget App' }}</title>
-    @vite('resources/css/app.css')
+    @if (file_exists(public_path('build/manifest.json')))
+        @vite('resources/css/app.css')
+    @endif
 </head>
 <body>
     <div class="container">
