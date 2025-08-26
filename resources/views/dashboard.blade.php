@@ -34,7 +34,7 @@
                 <div class="budget-item">
                     <div class="budget-card">
                         <div class="budget-name">
-                            {{ $budget->expenses->name ?? 'No category' }}
+                            {{ $budget->expense->name ?? 'No category' }}
                         </div>
                         <div class="budget-amount">
                             ${{ number_format($budget->amount, 2) }}
