@@ -13,8 +13,12 @@ require __DIR__.'/auth.php';
 
 // Auth-only pages
 Route::middleware(['auth'])->group(function () {
-    // /dashboard still lands users on accounts after login
-    Route::get('/dashboard', fn () => redirect()->route('accounts.index'))
+    Route::get('/dashboard', function () {
+        $user = auth()->user();
+        $accounts = $user->accounts;
+        $budgets = $user->budgets()->with('expense')->get();
+        return view('dashboard', compact('user', 'accounts', 'budgets'));
+    })
         ->middleware('verified')
         ->name('dashboard');
 
