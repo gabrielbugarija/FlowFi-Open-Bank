@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreAccountRequest extends FormRequest
 {
@@ -23,7 +24,7 @@ class StoreAccountRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'string', 'max:255'],
+            'type' => ['required', Rule::in(['checking', 'savings', 'credit', 'cash'])],
             'balance' => ['required', 'numeric'],
         ];
     }
