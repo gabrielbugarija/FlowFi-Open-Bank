@@ -47,6 +47,55 @@
                     @endforeach
                 </section>
             </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <section class="bg-white shadow-sm sm:rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">Monthly Totals</h3>
+                    <canvas id="monthlyTotalsChart"></canvas>
+                </section>
+                <section class="bg-white shadow-sm sm:rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">Category Totals</h3>
+                    <canvas id="categoryTotalsChart"></canvas>
+                </section>
+            </div>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/dashboard/monthly-totals')
+                .then(r => r.json())
+                .then(data => {
+                    const labels = data.map(item => item.month);
+                    const totals = data.map(item => item.total);
+                    new Chart(document.getElementById('monthlyTotalsChart'), {
+                        type: 'bar',
+                        data: {
+                            labels,
+                            datasets: [{
+                                label: 'Total',
+                                data: totals,
+                                backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                            }]
+                        },
+                    });
+                });
+
+            fetch('/api/dashboard/category-totals')
+                .then(r => r.json())
+                .then(data => {
+                    const labels = data.map(item => item.category);
+                    const totals = data.map(item => item.total);
+                    new Chart(document.getElementById('categoryTotalsChart'), {
+                        type: 'doughnut',
+                        data: {
+                            labels,
+                            datasets: [{
+                                data: totals,
+                            }]
+                        },
+                    });
+                });
+        });
+    </script>
 </x-app-layout>
