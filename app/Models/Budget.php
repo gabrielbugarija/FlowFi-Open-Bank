@@ -8,9 +8,13 @@ class Budget extends Model
 {
     protected $fillable = [
         'user_id',
-        'expense_id',
-        'amount',
+        'goal_amount',
         'period',
+    ];
+
+    protected $appends = [
+        'spent',
+        'progress',
     ];
 
     public function user()
@@ -18,8 +22,26 @@ class Budget extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function expense()
+    public function getSpentAttribute()
     {
-        return $this->belongsTo(Expenses::class, 'expense_id');
+        $start = $this->period === 'monthly'
+            ? now()->startOfMonth()
+            : now()->startOfQuarter();
+
+        return Transaction::whereHas('account', function ($q) {
+            $q->where('user_id', $this->user_id);
+        })
+            ->where('type', 'expense')
+            ->whereBetween('date', [$start, now()])
+            ->sum('amount');
+    }
+
+    public function getProgressAttribute()
+    {
+        if ($this->goal_amount == 0) {
+            return 0;
+        }
+
+        return min(100, round(($this->spent / $this->goal_amount) * 100, 2));
     }
 }

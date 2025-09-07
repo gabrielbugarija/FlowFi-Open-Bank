@@ -16,7 +16,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', function () {
         $user = auth()->user();
         $accounts = $user->accounts;
-        $budgets = $user->budgets()->with('expense')->get();
+        $budgets = $user->budgets;
         return view('dashboard', compact('user', 'accounts', 'budgets'));
     })
         ->middleware('verified')

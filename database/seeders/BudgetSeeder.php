@@ -5,9 +5,6 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
-use App\Models\Expenses;
-
-
 class BudgetSeeder extends Seeder
 {
     /**
@@ -16,19 +13,15 @@ class BudgetSeeder extends Seeder
     public function run(): void
     {
         $user = User::first();
-        $food = Expenses::where('name', 'Food')->first();
-        $transport = Expenses::where('name', 'Transport')->first();
 
         $user->budgets()->createMany([
             [
-                'expense_id' => $food->id,
-                'amount' => 400.00,
+                'goal_amount' => 1000.00,
                 'period' => 'monthly',
             ],
             [
-                'expense_id' => $transport->id,
-                'amount' => 150.00,
-                'period' => 'monthly',
+                'goal_amount' => 3000.00,
+                'period' => 'quarterly',
             ],
         ]);
     }

@@ -13,9 +13,8 @@ return new class extends Migration
 {
     Schema::create('budgets', function (Blueprint $table) {
         $table->id();
-        $table->foreignId('expense_id')->constrained()->onDelete('cascade');
         $table->foreignId('user_id')->constrained()->onDelete('cascade');
-        $table->decimal('amount', 12, 2);
+        $table->decimal('goal_amount', 12, 2);
         $table->enum('period', ['monthly', 'quarterly']);
         $table->timestamps();
     });

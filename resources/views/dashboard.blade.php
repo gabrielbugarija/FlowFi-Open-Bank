@@ -37,12 +37,13 @@
                     @foreach($budgets as $budget)
                         <div class="mb-4">
                             <div class="flex justify-between text-sm mb-1">
-                                <span class="font-medium text-gray-900">{{ $budget->expense->name ?? 'No category' }}</span>
-                                <span class="font-semibold text-gray-900">${{ number_format($budget->amount, 2) }}</span>
+                                <span class="font-medium text-gray-900">{{ ucfirst($budget->period) }} Budget</span>
+                                <span class="font-semibold text-gray-900">${{ number_format($budget->goal_amount, 2) }}</span>
                             </div>
                             <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div class="bg-green-500 h-2 rounded-full" style="width: {{ min(100, ($budget->amount / max($budget->amount, 1000)) * 100) }}%"></div>
+                                <div class="bg-green-500 h-2 rounded-full" style="width: {{ $budget->progress }}%"></div>
                             </div>
+                            <div class="text-xs text-gray-600 mt-1">Spent ${{ number_format($budget->spent, 2) }} ({{ $budget->progress }}%)</div>
                         </div>
                     @endforeach
                 </section>

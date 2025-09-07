@@ -24,9 +24,4 @@ class Expenses extends Model
         return $this->belongsToMany(Transaction::class, 'expense_type');
     }
 
-    public function budgets()
-    {
-        return $this->hasMany(Budget::class, 'expense_id');
-    }
-
 }
