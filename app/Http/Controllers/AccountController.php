@@ -14,7 +14,10 @@ class AccountController extends Controller
      */
     public function index()
     {
-        $accounts = Account::where('user_id', auth()->id())->get();
+        $accounts = Account::withCount('transactions')
+            ->where('user_id', auth()->id())
+            ->get();
+
         return view('accounts.index', compact('accounts'));
     }
 
@@ -39,9 +42,15 @@ class AccountController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Account $account)
     {
-        //
+        abort_unless($account->user_id === auth()->id(), 403);
+
+        $transactions = $account->transactions()
+            ->orderBy('date')
+            ->get();
+
+        return view('accounts.show', compact('account', 'transactions'));
     }
 
     /**
