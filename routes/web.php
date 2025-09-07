@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 // Public home page
@@ -12,18 +13,11 @@ Route::view('/', 'home')->name('home');
 require __DIR__.'/auth.php';
 
 // Auth-only pages
-Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', function () {
-        $user = auth()->user();
-        $accounts = $user->accounts;
-        $budgets = $user->budgets()->with('expense')->get();
-        return view('dashboard', compact('user', 'accounts', 'budgets'));
-    })
-        ->middleware('verified')
-        ->name('dashboard');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-      Route::resource('accounts', AccountController::class);
-      Route::resource('transactions', TransactionController::class);
+    Route::resource('accounts', AccountController::class);
+    Route::resource('transactions', TransactionController::class);
 
     // (Optional) Breeze profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
