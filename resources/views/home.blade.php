@@ -1,4 +1,4 @@
-<x-guest-layout>
+<x-marketing-layout>
   {{-- HERO SECTION --}}
   <section class="relative min-h-[60vh] flex items-center">
     {{-- Background gradient --}}
@@ -174,4 +174,4 @@
       </div>
     </div>
   </section>
-</x-guest-layout>
+</x-marketing-layout>
