@@ -10,17 +10,26 @@ class Account extends Model
     use HasFactory;
 
     protected $fillable = [
-    'user_id',
-    'name',
-    'type',
-    'balance',
-];
-    public function user() {
-    return $this->belongsTo(User::class);
-}
+        'user_id',
+        'name',
+        'type',
+        'balance',
+    ];
 
-public function transactions() {
-    return $this->hasMany(Transaction::class);
-}
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    public function updateBalance(): void
+    {
+        $this->update([
+            'balance' => $this->transactions()->sum('amount'),
+        ]);
+    }
 }
