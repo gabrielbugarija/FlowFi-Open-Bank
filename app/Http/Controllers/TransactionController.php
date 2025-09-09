@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\TransactionsChanged;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Models\Account;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\DB;
 
 class TransactionController extends Controller
 {
@@ -37,7 +38,11 @@ class TransactionController extends Controller
      */
     public function store(StoreTransactionRequest $request)
     {
-        Transaction::create($request->validated());
+        DB::transaction(function () use ($request) {
+            Transaction::create($request->validated());
+
+            DB::afterCommit(fn () => TransactionsChanged::dispatch(Auth::id()));
+        });
 
         return redirect()->route('transactions.index');
     }
@@ -65,7 +70,11 @@ class TransactionController extends Controller
      */
     public function update(StoreTransactionRequest $request, Transaction $transaction)
     {
-        $transaction->update($request->validated());
+        DB::transaction(function () use ($request, $transaction) {
+            $transaction->update($request->validated());
+
+            DB::afterCommit(fn () => TransactionsChanged::dispatch(Auth::id()));
+        });
 
         return redirect()->route('transactions.index');
     }
@@ -75,7 +84,11 @@ class TransactionController extends Controller
      */
     public function destroy(Transaction $transaction)
     {
-        $transaction->delete();
+        DB::transaction(function () use ($transaction) {
+            $transaction->delete();
+
+            DB::afterCommit(fn () => TransactionsChanged::dispatch(Auth::id()));
+        });
 
         return redirect()->route('transactions.index');
     }
