@@ -6,6 +6,7 @@
   </x-slot>
   <div class="py-6">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+      @php($types = ['income', 'expense', 'transfer'])
       <form method="POST" action="{{ route('transactions.store') }}" class="space-y-4">
         @csrf
         <div>
@@ -18,7 +19,11 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
-          <input type="text" name="type" class="mt-1 block w-full" />
+          <select name="type" class="mt-1 block w-full">
+            @foreach($types as $type)
+              <option value="{{ $type }}" @selected(old('type') === $type)>{{ ucfirst($type) }}</option>
+            @endforeach
+          </select>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
