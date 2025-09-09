@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Models\Account;
 use App\Models\Transaction;
+use App\Events\TransactionsChanged;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -17,7 +18,10 @@ class TransactionController extends Controller
     {
         $transactions = Transaction::whereHas('account', function ($query) {
             $query->where('user_id', auth()->id());
-        })->with('account', 'expenses')->latest()->get();
+        })
+        ->with('account', 'expenses')
+        ->latest()
+        ->paginate(15);
 
         return view('transactions.index', compact('transactions'));
     }
@@ -38,6 +42,8 @@ class TransactionController extends Controller
     public function store(StoreTransactionRequest $request)
     {
         Transaction::create($request->validated());
+
+        TransactionsChanged::dispatch(auth()->id());
 
         return redirect()->route('transactions.index');
     }
@@ -67,6 +73,8 @@ class TransactionController extends Controller
     {
         $transaction->update($request->validated());
 
+        TransactionsChanged::dispatch(auth()->id());
+
         return redirect()->route('transactions.index');
     }
 
@@ -76,6 +84,8 @@ class TransactionController extends Controller
     public function destroy(Transaction $transaction)
     {
         $transaction->delete();
+
+        TransactionsChanged::dispatch(auth()->id());
 
         return redirect()->route('transactions.index');
     }

@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('expense_type', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('transaction_id')->constrained()->onDelete('cascade');
-            $table->foreignId('expenses_id')->constrained()->onDelete('cascade');
+            $table->foreignId('transaction_id')->constrained()->onDelete('cascade')->index();
+            $table->foreignId('expenses_id')->constrained()->onDelete('cascade')->index();
         });
     }
 
