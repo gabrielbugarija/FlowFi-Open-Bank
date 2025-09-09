@@ -6,6 +6,7 @@ use App\Http\Requests\StoreTransactionRequest;
 use App\Models\Account;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Auth;
+use App\Events\TransactionChanged;
 
 
 class TransactionController extends Controller
@@ -37,7 +38,9 @@ class TransactionController extends Controller
      */
     public function store(StoreTransactionRequest $request)
     {
-        Transaction::create($request->validated());
+        $transaction = Transaction::create($request->validated());
+
+        broadcast(new TransactionChanged($transaction, 'created'))->toOthers();
 
         return redirect()->route('transactions.index');
     }
@@ -67,6 +70,8 @@ class TransactionController extends Controller
     {
         $transaction->update($request->validated());
 
+        broadcast(new TransactionChanged($transaction, 'updated'))->toOthers();
+
         return redirect()->route('transactions.index');
     }
 
@@ -76,6 +81,8 @@ class TransactionController extends Controller
     public function destroy(Transaction $transaction)
     {
         $transaction->delete();
+
+        broadcast(new TransactionChanged($transaction, 'deleted'))->toOthers();
 
         return redirect()->route('transactions.index');
     }

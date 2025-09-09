@@ -47,11 +47,48 @@
                     @endforeach
                 </section>
             </div>
+            <div class="bg-white shadow-sm sm:rounded-lg p-4 mt-6 flex flex-wrap gap-4 items-end">
+                <div>
+                    <label for="filter-start" class="text-sm font-medium text-gray-700">Start</label>
+                    <input type="date" id="filter-start" class="mt-1 border-gray-300 rounded-md" />
+                </div>
+                <div>
+                    <label for="filter-end" class="text-sm font-medium text-gray-700">End</label>
+                    <input type="date" id="filter-end" class="mt-1 border-gray-300 rounded-md" />
+                </div>
+                <div>
+                    <label for="filter-account" class="text-sm font-medium text-gray-700">Account</label>
+                    <select id="filter-account" class="mt-1 border-gray-300 rounded-md">
+                        <option value="">All</option>
+                        @foreach($accounts as $account)
+                            <option value="{{ $account->id }}">{{ $account->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="filter-category" class="text-sm font-medium text-gray-700">Category</label>
+                    <select id="filter-category" class="mt-1 border-gray-300 rounded-md">
+                        <option value="">All</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="filter-period" class="text-sm font-medium text-gray-700">Period</label>
+                    <select id="filter-period" class="mt-1 border-gray-300 rounded-md">
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly" selected>Monthly</option>
+                    </select>
+                </div>
+                <button id="applyFilters" class="px-4 py-2 bg-blue-500 text-white rounded">Apply</button>
+            </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                 <section class="bg-white shadow-sm sm:rounded-lg p-6">
-                    <h3 class="text-lg font-semibold mb-4 text-gray-800">Monthly Totals</h3>
-                    <canvas id="monthlyTotalsChart"></canvas>
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">Totals Over Time</h3>
+                    <canvas id="timeTotalsChart"></canvas>
                 </section>
                 <section class="bg-white shadow-sm sm:rounded-lg p-6">
                     <h3 class="text-lg font-semibold mb-4 text-gray-800">Category Totals</h3>
@@ -61,41 +98,84 @@
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.11.3/dist/echo.iife.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            fetch('/api/dashboard/monthly-totals')
-                .then(r => r.json())
-                .then(data => {
-                    const labels = data.map(item => item.month);
-                    const totals = data.map(item => item.total);
-                    new Chart(document.getElementById('monthlyTotalsChart'), {
-                        type: 'bar',
-                        data: {
-                            labels,
-                            datasets: [{
-                                label: 'Total',
-                                data: totals,
-                                backgroundColor: 'rgba(59, 130, 246, 0.5)',
-                            }]
-                        },
-                    });
-                });
+            let timeChart;
+            let categoryChart;
 
-            fetch('/api/dashboard/category-totals')
-                .then(r => r.json())
-                .then(data => {
-                    const labels = data.map(item => item.category);
-                    const totals = data.map(item => item.total);
-                    new Chart(document.getElementById('categoryTotalsChart'), {
-                        type: 'doughnut',
-                        data: {
-                            labels,
-                            datasets: [{
-                                data: totals,
-                            }]
-                        },
+            function buildParams() {
+                const params = new URLSearchParams();
+                const start = document.getElementById('filter-start').value;
+                if (start) params.append('start', start);
+                const end = document.getElementById('filter-end').value;
+                if (end) params.append('end', end);
+                const account = document.getElementById('filter-account').value;
+                if (account) params.append('account', account);
+                const category = document.getElementById('filter-category').value;
+                if (category) params.append('category', category);
+                return params.toString();
+            }
+
+            function fetchData() {
+                const params = buildParams();
+                const period = document.getElementById('filter-period').value;
+                fetch(`/api/dashboard/${period}-totals?${params}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        const labelKey = period === 'monthly' ? 'month' : period === 'weekly' ? 'week' : 'day';
+                        const labels = data.map(item => item[labelKey]);
+                        const totals = data.map(item => item.total);
+                        if (timeChart) timeChart.destroy();
+                        timeChart = new Chart(document.getElementById('timeTotalsChart'), {
+                            type: 'bar',
+                            data: {
+                                labels,
+                                datasets: [{
+                                    label: 'Total',
+                                    data: totals,
+                                    backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                                }]
+                            },
+                        });
                     });
-                });
+
+                fetch(`/api/dashboard/category-totals?${params}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        const labels = data.map(item => item.category);
+                        const totals = data.map(item => item.total);
+                        if (categoryChart) categoryChart.destroy();
+                        categoryChart = new Chart(document.getElementById('categoryTotalsChart'), {
+                            type: 'doughnut',
+                            data: {
+                                labels,
+                                datasets: [{
+                                    data: totals,
+                                }]
+                            },
+                        });
+                    });
+            }
+
+            document.getElementById('applyFilters').addEventListener('click', fetchData);
+
+            fetchData();
+
+            const echo = new Echo({
+                broadcaster: 'pusher',
+                key: '{{ env('PUSHER_APP_KEY') }}',
+                cluster: '{{ env('PUSHER_APP_CLUSTER') }}',
+                wsHost: window.location.hostname,
+                wsPort: 6001,
+                forceTLS: false,
+                disableStats: true,
+            });
+
+            echo.channel('transactions').listen('TransactionChanged', () => {
+                fetchData();
+            });
         });
     </script>
 </x-app-layout>
