@@ -51,11 +51,21 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                 <section class="bg-white shadow-sm sm:rounded-lg p-6">
                     <h3 class="text-lg font-semibold mb-4 text-gray-800">Monthly Totals</h3>
-                    <canvas id="monthlyTotalsChart"></canvas>
+                    <div id="monthlyChartWrapper" x-data="{ loading: true }" class="relative">
+                        <div x-show="loading" class="absolute inset-0 flex items-center justify-center bg-white/70">
+                            <div class="loader"></div>
+                        </div>
+                        <canvas id="monthlyTotalsChart"></canvas>
+                    </div>
                 </section>
                 <section class="bg-white shadow-sm sm:rounded-lg p-6">
                     <h3 class="text-lg font-semibold mb-4 text-gray-800">Category Totals</h3>
-                    <canvas id="categoryTotalsChart"></canvas>
+                    <div id="categoryChartWrapper" x-data="{ loading: true }" class="relative">
+                        <div x-show="loading" class="absolute inset-0 flex items-center justify-center bg-white/70">
+                            <div class="loader"></div>
+                        </div>
+                        <canvas id="categoryTotalsChart"></canvas>
+                    </div>
                 </section>
             </div>
         </div>
@@ -79,6 +89,7 @@
                             }]
                         },
                     });
+                    document.getElementById('monthlyChartWrapper').__x.$data.loading = false;
                 });
 
             fetch('/api/dashboard/category-totals')
@@ -95,6 +106,7 @@
                             }]
                         },
                     });
+                    document.getElementById('categoryChartWrapper').__x.$data.loading = false;
                 });
         });
     </script>
