@@ -9,9 +9,12 @@
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
       <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg">
         <div class="p-6 space-y-6">
-          <div>
-            <canvas id="transactionsChart" class="w-full h-64"></canvas>
-          </div>
+            <div id="transactionsChartWrapper" x-data="{ loading: true }" class="relative">
+              <div x-show="loading" class="absolute inset-0 flex items-center justify-center bg-white/70">
+                <div class="loader"></div>
+              </div>
+              <canvas id="transactionsChart" class="w-full h-64"></canvas>
+            </div>
 
           <!-- Bulk action toolbar -->
           <div x-show="selected.length" class="flex items-center gap-3 p-3 rounded-md bg-gray-100 dark:bg-gray-700">
@@ -111,24 +114,25 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    const txCtx = document.getElementById('transactionsChart').getContext('2d');
-    const txChart = new Chart(txCtx, {
-      type: 'bar',
-      data: {
-        labels: @json($transactions->pluck('date')->map(fn($d) => optional($d)->format('Y-m-d'))),
-        datasets: [{
-          label: 'Amount',
-          data: @json($transactions->pluck('amount')),
-          backgroundColor: '#4f46e5'
-        }]
-      },
-      options: {
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { beginAtZero: true }
-        }
+  const txCtx = document.getElementById('transactionsChart').getContext('2d');
+  const txChart = new Chart(txCtx, {
+    type: 'bar',
+    data: {
+      labels: @json($transactions->pluck('date')->map(fn($d) => optional($d)->format('Y-m-d'))),
+      datasets: [{
+        label: 'Amount',
+        data: @json($transactions->pluck('amount')),
+        backgroundColor: '#4f46e5'
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true }
       }
-    });
+    }
+  });
+  document.getElementById('transactionsChartWrapper').__x.$data.loading = false;
   </script>
   <script>
     document.addEventListener('alpine:init', () => {
