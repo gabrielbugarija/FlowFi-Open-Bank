@@ -13,6 +13,24 @@
             <canvas id="transactionsChart" class="w-full h-64"></canvas>
           </div>
 
+          <form method="GET" action="{{ route('transactions.index') }}" class="flex flex-wrap items-end gap-2">
+            <div>
+              <label for="start_date" class="sr-only">Start Date</label>
+              <input type="date" name="start_date" id="start_date" value="{{ request('start_date') }}" class="rounded-md border-gray-300" />
+            </div>
+            <div>
+              <label for="end_date" class="sr-only">End Date</label>
+              <input type="date" name="end_date" id="end_date" value="{{ request('end_date') }}" class="rounded-md border-gray-300" />
+            </div>
+            <div class="flex-1">
+              <label for="search" class="sr-only">Search</label>
+              <input type="text" name="search" id="search" placeholder="Search description" value="{{ request('search') }}" class="w-full rounded-md border-gray-300" />
+            </div>
+            <div>
+              <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md">Filter</button>
+            </div>
+          </form>
+
           <!-- Bulk action toolbar -->
           <div x-show="selected.length" class="flex items-center gap-3 p-3 rounded-md bg-gray-100 dark:bg-gray-700">
             <span x-text="selected.length + ' selected'"></span>
@@ -94,6 +112,10 @@
             </table>
           </div>
 
+        <div class="mt-4">
+          {{ $transactions->links() }}
+        </div>
+
       <div class="mt-6 flex gap-3">
         <a href="{{ route('accounts.index') }}" class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-700 bg-gray-100 border border-transparent hover:bg-gray-200 dark:text-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition">
           Back to Accounts
@@ -115,10 +137,10 @@
     const txChart = new Chart(txCtx, {
       type: 'bar',
       data: {
-        labels: @json($transactions->pluck('date')->map(fn($d) => optional($d)->format('Y-m-d'))),
+        labels: @json($transactions->getCollection()->pluck('date')->map(fn($d) => optional($d)->format('Y-m-d'))),
         datasets: [{
           label: 'Amount',
-          data: @json($transactions->pluck('amount')),
+          data: @json($transactions->getCollection()->pluck('amount')),
           backgroundColor: '#4f46e5'
         }]
       },
