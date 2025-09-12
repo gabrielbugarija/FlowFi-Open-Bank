@@ -6,6 +6,7 @@ use App\Events\TransactionsChanged;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Models\Account;
 use App\Models\Transaction;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -14,11 +15,25 @@ class TransactionController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $transactions = Transaction::whereHas('account', function ($query) {
+        $query = Transaction::whereHas('account', function ($query) {
             $query->where('user_id', auth()->id());
-        })->with('account', 'expenses')->latest()->get();
+        })->with('account', 'expenses')->latest();
+
+        if ($request->filled('search')) {
+            $query->where('description', 'like', '%' . $request->string('search') . '%');
+        }
+
+        if ($request->filled('start_date')) {
+            $query->whereDate('date', '>=', $request->date('start_date'));
+        }
+
+        if ($request->filled('end_date')) {
+            $query->whereDate('date', '<=', $request->date('end_date'));
+        }
+
+        $transactions = $query->paginate(25)->withQueryString();
 
         return view('transactions.index', compact('transactions'));
     }
