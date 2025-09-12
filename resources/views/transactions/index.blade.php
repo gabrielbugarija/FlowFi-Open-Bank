@@ -6,6 +6,12 @@
   </x-slot>
 
   <div class="py-6" x-data="transactionsPage()">
+    <div
+      x-show="$store.toast.show"
+      x-transition
+      class="fixed top-4 right-4 px-4 py-2 rounded text-white shadow"
+      :class="$store.toast.type === 'error' ? 'bg-red-600' : 'bg-green-600'"
+      x-text="$store.toast.message"></div>
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
       <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg">
         <div class="p-6 space-y-6">
@@ -34,9 +40,9 @@
           <!-- Bulk action toolbar -->
           <div x-show="selected.length" class="flex items-center gap-3 p-3 rounded-md bg-gray-100 dark:bg-gray-700">
             <span x-text="selected.length + ' selected'"></span>
-            <button @click="bulkDelete" class="px-2 py-1 text-sm text-red-600">Delete</button>
+            <button @click="bulkDelete" :disabled="processing" class="px-2 py-1 text-sm text-red-600" :class="{ 'opacity-50 cursor-not-allowed': processing }">Delete</button>
             <input type="text" x-model="bulkType" placeholder="New type" class="px-2 py-1 text-sm rounded" />
-            <button @click="bulkCategorize" class="px-2 py-1 text-sm text-indigo-600">Re-categorize</button>
+            <button @click="bulkCategorize" :disabled="processing" class="px-2 py-1 text-sm text-indigo-600" :class="{ 'opacity-50 cursor-not-allowed': processing }">Re-categorize</button>
           </div>
 
           <div class="overflow-x-auto">
@@ -92,13 +98,13 @@
                     </td>
                     <td class="px-4 py-3 text-sm text-right space-x-2" x-show="swiped || editing">
                       <template x-if="!editing">
-                        <button @click="editing = true" class="text-indigo-600">Edit</button>
+                        <button @click="editing = true" class="text-indigo-600" :disabled="processing" :class="{ 'opacity-50 cursor-not-allowed': processing }">Edit</button>
                       </template>
                       <template x-if="editing">
-                        <button @click="save" class="text-green-600">Save</button>
-                        <button @click="editing = false" class="text-gray-600">Cancel</button>
+                        <button @click="save" class="text-green-600" :disabled="processing" :class="{ 'opacity-50 cursor-not-allowed': processing }">Save</button>
+                        <button @click="editing = false" class="text-gray-600" :disabled="processing" :class="{ 'opacity-50 cursor-not-allowed': processing }">Cancel</button>
                       </template>
-                      <button @click="remove" class="text-red-600">Delete</button>
+                      <button @click="remove" class="text-red-600" :disabled="processing" :class="{ 'opacity-50 cursor-not-allowed': processing }">Delete</button>
                     </td>
                   </tr>
                 @empty
@@ -154,23 +160,47 @@
   </script>
   <script>
     document.addEventListener('alpine:init', () => {
+      Alpine.store('toast', {
+        show: false,
+        message: '',
+        type: 'success',
+        showToast(message, type = 'success') {
+          this.message = message;
+          this.type = type;
+          this.show = true;
+          setTimeout(() => (this.show = false), 3000);
+        }
+      });
+
       Alpine.data('transactionsPage', () => ({
         selected: [],
         bulkType: '',
+        processing: false,
         toggleAll(checked) {
           this.selected = checked
             ? Array.from(document.querySelectorAll('.row-checkbox')).map(cb => cb.value)
             : [];
         },
         bulkDelete() {
+          this.processing = true;
           Promise.all(this.selected.map(id =>
             fetch(`/transactions/${id}`, {
               method: 'DELETE',
               headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+            }).then(res => {
+              if (!res.ok) throw new Error();
+              document.querySelector(`.row-checkbox[value="${id}"]`)?.closest('tr')?.remove();
             })
-          )).then(() => window.location.reload());
+          ))
+          .then(() => {
+            Alpine.store('toast').showToast('Transactions deleted');
+            this.selected = [];
+          })
+          .catch(() => Alpine.store('toast').showToast('Failed to delete', 'error'))
+          .finally(() => { this.processing = false; });
         },
         bulkCategorize() {
+          this.processing = true;
           Promise.all(this.selected.map(id =>
             fetch(`/transactions/${id}`, {
               method: 'PUT',
@@ -179,8 +209,18 @@
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
               },
               body: JSON.stringify({ type: this.bulkType })
+            }).then(res => {
+              if (!res.ok) throw new Error();
+              const row = document.querySelector(`.row-checkbox[value="${id}"]`)?.closest('tr');
+              if (row) row.__x.$data.form.type = this.bulkType;
             })
-          )).then(() => window.location.reload());
+          ))
+          .then(() => {
+            Alpine.store('toast').showToast('Transactions updated');
+            this.selected = [];
+          })
+          .catch(() => Alpine.store('toast').showToast('Failed to update', 'error'))
+          .finally(() => { this.processing = false; });
         }
       }));
 
@@ -197,6 +237,7 @@
         editing: false,
         swiped: false,
         startX: 0,
+        processing: false,
         touchStart(e) { this.startX = e.touches[0].clientX; },
         touchEnd(e) {
           const diff = e.changedTouches[0].clientX - this.startX;
@@ -204,6 +245,7 @@
           if (diff > 40) this.swiped = false;
         },
         save() {
+          this.processing = true;
           fetch(`/transactions/${this.id}`, {
             method: 'PUT',
             headers: {
@@ -211,13 +253,25 @@
               'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
             body: JSON.stringify(this.form)
-          }).then(() => { this.editing = false; this.swiped = false; });
+          }).then(res => {
+            if (!res.ok) throw new Error();
+            this.editing = false;
+            this.swiped = false;
+            Alpine.store('toast').showToast('Transaction updated');
+          }).catch(() => Alpine.store('toast').showToast('Failed to update', 'error'))
+            .finally(() => { this.processing = false; });
         },
         remove() {
+          this.processing = true;
           fetch(`/transactions/${this.id}`, {
             method: 'DELETE',
             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
-          }).then(() => { this.$el.remove(); });
+          }).then(res => {
+            if (!res.ok) throw new Error();
+            this.$el.remove();
+            Alpine.store('toast').showToast('Transaction deleted');
+          }).catch(() => Alpine.store('toast').showToast('Failed to delete', 'error'))
+            .finally(() => { this.processing = false; });
         }
       }));
     });
