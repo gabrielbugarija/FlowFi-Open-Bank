@@ -25,7 +25,7 @@ class TransactionSeeder extends Seeder
             'amount' => 75.50,
             'date' => now()->subDays(3),
         ]);
-        $t1->categories()->attach($food);
+        $t1->expenses()->attach($food);
 
         $t2 = $checking->transactions()->create([
             'type' => 'expense',
@@ -33,7 +33,7 @@ class TransactionSeeder extends Seeder
             'amount' => 50.00,
             'date' => now()->subDays(2),
         ]);
-        $t2->categories()->attach($transport);
+        $t2->expenses()->attach($transport);
 
         $t3 = $credit->transactions()->create([
             'type' => 'expense',
@@ -41,7 +41,7 @@ class TransactionSeeder extends Seeder
             'amount' => 1200.00,
             'date' => now()->subDays(5),
         ]);
-        $t3->categories()->attach($rent);
+        $t3->expenses()->attach($rent);
 
         $t4 = $checking->transactions()->create([
             'type' => 'income',
@@ -49,6 +49,6 @@ class TransactionSeeder extends Seeder
             'amount' => 3000.00,
             'date' => now()->subDays(10),
         ]);
-        $t4->categories()->attach($salary);
+        $t4->expenses()->attach($salary);
     }
 }

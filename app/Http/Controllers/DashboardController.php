@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Expenses;
 use App\Models\Transaction;
+use App\Support\Database\DateExpressions;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -29,14 +30,13 @@ class DashboardController extends Controller
         $userId = auth()->id();
 
         $totals = Cache::rememberForever("dashboard.monthly_totals.$userId", function () use ($userId) {
-            return Transaction::select(
-                DB::raw("DATE_FORMAT(date, '%Y-%m') as month"),
-                DB::raw('SUM(amount) as total')
-            )
+            $monthExpression = DateExpressions::monthYear('transactions.date');
+
+            return Transaction::selectRaw("$monthExpression as month, SUM(amount) as total")
                 ->whereHas('account', function ($q) use ($userId) {
                     $q->where('user_id', $userId);
                 })
-                ->groupBy('month')
+                ->groupByRaw($monthExpression)
                 ->orderBy('month')
                 ->get();
         });
