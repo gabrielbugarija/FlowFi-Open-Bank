@@ -58,6 +58,8 @@ class AccountController extends Controller
      */
     public function edit(Account $account)
     {
+        abort_unless($account->user_id === Auth::id(), 403);
+
         return view('accounts.edit', compact('account'));
     }
 
@@ -66,6 +68,8 @@ class AccountController extends Controller
      */
     public function update(StoreAccountRequest $request, Account $account)
     {
+        abort_unless($account->user_id === $request->user()->id, 403);
+
         $account->update($request->validated());
 
         return redirect()->route('accounts.index');
@@ -76,6 +80,8 @@ class AccountController extends Controller
      */
     public function destroy(Account $account)
     {
+        abort_unless($account->user_id === Auth::id(), 403);
+
         $account->delete();
 
         return redirect()->route('accounts.index');
