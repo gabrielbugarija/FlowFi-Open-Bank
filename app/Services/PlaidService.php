@@ -12,9 +12,9 @@ class PlaidService
         protected ?string $secret = null,
         protected ?string $environment = null,
     ) {
-         $this->clientId ??= config('plaid.client_id');
-    $this->secret ??= config('plaid.secret');
-    $this->environment ??= config('plaid.env', 'sandbox');
+        $this->clientId ??= config('plaid.client_id');
+        $this->secret ??= config('plaid.secret');
+        $this->environment ??= config('plaid.env', 'sandbox');
     }
 
     public function createLinkToken(?int $userId = null): string
@@ -40,19 +40,28 @@ class PlaidService
         return $linkToken;
     }
 
-    public function exchangePublicToken(string $publicToken): string
+    /**
+     * Exchange a public token for an access token and associated metadata.
+     *
+     * @return array{access_token: string, item_id: string|null}
+     */
+    public function exchangePublicToken(string $publicToken): array
     {
         $response = $this->plaidRequest('/item/public_token/exchange', [
             'public_token' => $publicToken,
         ]);
 
         $accessToken = $response['access_token'] ?? null;
+        $itemId = $response['item_id'] ?? null;
 
         if (! is_string($accessToken) || $accessToken === '') {
             throw new RuntimeException('Plaid did not return an access token.');
         }
 
-        return $accessToken;
+        return [
+            'access_token' => $accessToken,
+            'item_id' => is_string($itemId) && $itemId !== '' ? $itemId : null,
+        ];
     }
 
     public function getAccounts(string $accessToken): array
