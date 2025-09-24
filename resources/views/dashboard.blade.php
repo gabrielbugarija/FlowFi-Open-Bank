@@ -99,7 +99,7 @@
                         const handler = Plaid.create({
                             token: linkToken,
                             onSuccess: async (publicToken) => {
-                                await fetch('/api/plaid/webhook', {
+                                await fetch('/api/plaid/exchange', {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json',
