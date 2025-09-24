@@ -43,7 +43,7 @@ class TransactionController extends Controller
      */
     public function create()
     {
-        $accounts = Account::all();
+        $accounts = Account::where('user_id', Auth::id())->get();
 
         return view('transactions.create', compact('accounts'));
     }
@@ -53,8 +53,19 @@ class TransactionController extends Controller
      */
     public function store(StoreTransactionRequest $request)
     {
-        DB::transaction(function () use ($request) {
-            Transaction::create($request->validated());
+        $data = $request->validated();
+
+        $userId = $request->user()?->id;
+
+        abort_if(is_null($userId), 403);
+
+        abort_unless(
+            Account::where('user_id', $userId)->whereKey($data['account_id'])->exists(),
+            403
+        );
+
+        DB::transaction(function () use ($data) {
+            Transaction::create($data);
 
             DB::afterCommit(fn () => TransactionsChanged::dispatch(Auth::id()));
         });
@@ -75,7 +86,7 @@ class TransactionController extends Controller
      */
     public function edit(Transaction $transaction)
     {
-        $accounts = Account::all();
+        $accounts = Account::where('user_id', Auth::id())->get();
 
         return view('transactions.edit', compact('transaction', 'accounts'));
     }
@@ -85,8 +96,21 @@ class TransactionController extends Controller
      */
     public function update(StoreTransactionRequest $request, Transaction $transaction)
     {
-        DB::transaction(function () use ($request, $transaction) {
-            $transaction->update($request->validated());
+        abort_unless($transaction->account?->user_id === $request->user()?->id, 403);
+
+        $data = $request->validated();
+
+        $userId = $request->user()?->id;
+
+        abort_if(is_null($userId), 403);
+
+        abort_unless(
+            Account::where('user_id', $userId)->whereKey($data['account_id'])->exists(),
+            403
+        );
+
+        DB::transaction(function () use ($transaction, $data) {
+            $transaction->update($data);
 
             DB::afterCommit(fn () => TransactionsChanged::dispatch(Auth::id()));
         });
@@ -99,6 +123,8 @@ class TransactionController extends Controller
      */
     public function destroy(Transaction $transaction)
     {
+        abort_unless($transaction->account?->user_id === Auth::id(), 403);
+
         DB::transaction(function () use ($transaction) {
             $transaction->delete();
 
